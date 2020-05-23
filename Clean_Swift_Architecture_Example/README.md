@@ -12,3 +12,6 @@
 2. Display the image from URL
 3. Navigate or Present The Viewcontroller and Dismiss The Viewcontroller
 4. Pass the data from one Viewcontroller to another (Using Clean Swift Data Store).
+
+
+Replace your Unsplash client id and successfully run the project.

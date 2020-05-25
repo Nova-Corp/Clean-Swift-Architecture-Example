@@ -37,7 +37,7 @@ class HomeViewController: UIViewController, HomeDisplayLogic
     }()
     
     var spinner: UIActivityIndicatorView = {
-        let spinner = UIActivityIndicatorView(style: .medium)
+        let spinner = UIActivityIndicatorView(style: .gray)
         spinner.translatesAutoresizingMaskIntoConstraints = false
         return spinner
     }()
@@ -108,12 +108,38 @@ class HomeViewController: UIViewController, HomeDisplayLogic
     imageGrid.dataSource = self
     
     sendHomeRequestToServer()
-//    setupImageGrid()
     setupSearchBtn()
+    setupHomeBtn()
+    
+    
   }
     
+    func setupHomeBtn() {
+        var leftBtn = UIBarButtonItem()
+        if #available(iOS 13.0, *) {
+            leftBtn = UIBarButtonItem(image: UIImage(systemName: "house.fill"), style: .plain, target: self, action: #selector(tapHomeBtn))
+        } else {
+            leftBtn = UIBarButtonItem(image: #imageLiteral(resourceName: "browser"), style: .plain, target: self, action: #selector(tapHomeBtn))
+        }
+        self.navigationItem.leftBarButtonItem = leftBtn
+    }
+    
+    @objc func tapHomeBtn() {
+        searchKeyword = ""
+        currentSearchPage = 1
+        imageGrid.isHidden = true
+        spinner.startAnimating()
+        homePageViewModel.removeAll()
+        beginFetching()
+    }
+    
     func setupSearchBtn() {
-        let rightBtn = UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: #selector(tapSearchBtn))
+        var rightBtn = UIBarButtonItem()
+        if #available(iOS 13.0, *) {
+            rightBtn = UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: #selector(tapSearchBtn))
+        } else {
+            rightBtn = UIBarButtonItem(image: #imageLiteral(resourceName: "search"), style: .plain, target: self, action: #selector(tapSearchBtn))
+        }
         self.navigationItem.rightBarButtonItem = rightBtn
     }
     
@@ -139,6 +165,7 @@ class HomeViewController: UIViewController, HomeDisplayLogic
         DispatchQueue.main.async {
             self.spinner.stopAnimating()
             self.setupImageGrid()
+            self.imageGrid.isHidden = false
             self.imageGrid.reloadData()
             self.fetchingMore = false
         }
@@ -212,7 +239,11 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
             }
             
             let attachment = NSTextAttachment()
-            attachment.image = UIImage(systemName: "hand.thumbsup.fill")
+            if #available(iOS 13.0, *) {
+                attachment.image = UIImage(systemName: "hand.thumbsup.fill")
+            } else {
+                attachment.image = #imageLiteral(resourceName: "like")
+            }
             let attachmentString = NSAttributedString(attachment: attachment)
             guard let likes = homePageViewModel[indexPath.item].likes else { return cell }
             let myString = NSMutableAttributedString(string: "\(likes) ")

@@ -33,7 +33,11 @@ class DetailsViewController: UIViewController, DetailsDisplayLogic
 
     let closeBtn: UIButton = {
         let btn = UIButton(type: .custom)
-        btn.setImage(UIImage(systemName: "xmark"), for: .normal)
+        if #available(iOS 13.0, *) {
+            btn.setImage(UIImage(systemName: "xmark"), for: .normal)
+        } else {
+            btn.setImage(#imageLiteral(resourceName: "close"), for: .normal)
+        }
         btn.tintColor = .white
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
@@ -58,7 +62,11 @@ class DetailsViewController: UIViewController, DetailsDisplayLogic
     
     let copyImgBtn: UIButton = {
         let btn = UIButton(type: .custom)
-        btn.setImage(UIImage(systemName: "doc.on.doc.fill"), for: .normal)
+        if #available(iOS 13.0, *) {
+            btn.setImage(UIImage(systemName: "doc.on.doc.fill"), for: .normal)
+        } else {
+            btn.setImage(#imageLiteral(resourceName: "document"), for: .normal)
+        }
         btn.tintColor = .white
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
@@ -66,7 +74,11 @@ class DetailsViewController: UIViewController, DetailsDisplayLogic
     
     let shareImgBtn: UIButton = {
         let btn = UIButton(type: .custom)
-        btn.setImage(UIImage(systemName: "square.and.arrow.up.on.square.fill"), for: .normal)
+        if #available(iOS 13.0, *) {
+            btn.setImage(UIImage(systemName: "square.and.arrow.up.on.square.fill"), for: .normal)
+        } else {
+            btn.setImage(#imageLiteral(resourceName: "share"), for: .normal)
+        }
         btn.tintColor = .white
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn

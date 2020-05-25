@@ -10,7 +10,7 @@ import UIKit
 
 class SpinnerCell: UICollectionViewCell {
     var spinner: UIActivityIndicatorView = {
-        let spinner = UIActivityIndicatorView(style: .medium)
+        let spinner = UIActivityIndicatorView(style: .gray)
         spinner.translatesAutoresizingMaskIntoConstraints = false
         return spinner
     }()

@@ -33,11 +33,11 @@ class ImageCell: UICollectionViewCell {
         return label
     }()
     
-    let likeView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.clipsToBounds = true
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
+    let likeView: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .right
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     
@@ -71,7 +71,7 @@ class ImageCell: UICollectionViewCell {
             likeView.leftAnchor.constraint(equalTo: nameLabel.rightAnchor, constant: 2.0),
             likeView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -2.0),
             likeView.heightAnchor.constraint(equalTo: nameLabel.heightAnchor, constant: -4),
-            likeView.widthAnchor.constraint(equalTo: nameLabel.heightAnchor, constant: -4)
+            likeView.widthAnchor.constraint(equalToConstant: 52),
         ])
 
         contentView.addSubview(descriptionLabel)

@@ -31,10 +31,26 @@ class HomeViewController: UIViewController, HomeDisplayLogic
         layout.minimumLineSpacing = 2.0
         collectionView.backgroundColor = .white
         collectionView.register(ImageCell.self, forCellWithReuseIdentifier: "ImageCell")
+        collectionView.register(SpinnerCell.self, forCellWithReuseIdentifier: "SpinnerCell")
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
     }()
+    
+    var spinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView(style: .medium)
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        return spinner
+    }()
+    
+    var fetchingMore = false
 
+    var startSearch = false
+    
+    var searchKeyword: String = ""
+    
+    
+    
+    
   // MARK: Object lifecycle
   
   override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?)
@@ -86,36 +102,62 @@ class HomeViewController: UIViewController, HomeDisplayLogic
     self.view.backgroundColor = .white
     
     self.navigationController?.navigationBar.topItem?.title = "Gallery"
-    setupImageGrid()
+    
+    setupSpinner()
     
     
     imageGrid.delegate = self
     imageGrid.dataSource = self
     
-    sendRequestToServer()
+    sendHomeRequestToServer()
+//    setupImageGrid()
+    setupSearchBtn()
   }
+    
+    func setupSearchBtn() {
+        let rightBtn = UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: #selector(tapSearchBtn))
+        self.navigationItem.rightBarButtonItem = rightBtn
+    }
+    
+    @objc func tapSearchBtn(){
+        let router = HomeRouter()
+        router.navigateToSearchViewController(source: self, destination: ImageSearchViewController())
+    }
   
   // MARK: Do something
   
-  func sendRequestToServer()
+  func sendHomeRequestToServer()
   {
-    let request = Home.ImageList.Request()
+    let request = Home.ImageList.Request.HomePage()
     interactor?.getParsedJSONList(request: request)
   }
   
   func displayParsedImageList(viewModel: Home.ImageList.Response.ImageListModel)
   {
-    homePageViewModel = viewModel
+    
+    homePageViewModel.append(contentsOf: viewModel)
     DispatchQueue.main.async {
+        self.spinner.stopAnimating()
+        self.setupImageGrid()
         self.imageGrid.reloadData()
+        self.fetchingMore = false
     }
   }
 }
 
 extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout{
+    
+    func setupSpinner() {
+        self.view.addSubview(spinner)
+        spinner.startAnimating()
+        NSLayoutConstraint.activate([
+            spinner.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: self.view.centerYAnchor),
+        ])
+    }
+    
     func setupImageGrid() {
         self.view.addSubview(imageGrid)
-        
         NSLayoutConstraint.activate([
             imageGrid.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
             imageGrid.leftAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leftAnchor),
@@ -125,30 +167,98 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        CGSize(width: imageGrid.frame.width/2.01, height: imageGrid.frame.width/2)
+        if indexPath.section == 0 {
+            return CGSize(width: imageGrid.frame.width/2.01, height: imageGrid.frame.width/2)
+        }else{
+            return CGSize(width: imageGrid.frame.width, height: 54)
+        }
+    }
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        2
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        homePageViewModel.count
+        if section == 0 {
+            return homePageViewModel.count
+        }else if section == 1 {
+            return 1
+        }
+        return 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ImageCell", for: indexPath) as! ImageCell
-        cell.descriptionLabel.text = homePageViewModel[indexPath.item].altDescription
-        cell.nameLabel.text = homePageViewModel[indexPath.item].user?.name
         
-        guard let thumbURL = URL(string: (homePageViewModel[indexPath.item].urls?.thumb)!) else { return cell }
-        let data = try? Data(contentsOf: thumbURL)
-        if let imageData = data {
-            let image = UIImage(data: imageData)
-            cell.imageView.image = image
+        if indexPath.section == 0 {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ImageCell", for: indexPath) as! ImageCell
+            cell.descriptionLabel.text = homePageViewModel[indexPath.item].altDescription
+            cell.nameLabel.text = homePageViewModel[indexPath.item].user?.name
+            
+            guard let thumbURL = URL(string: (homePageViewModel[indexPath.item].urls?.thumb)!) else { return cell }
+            let data = try? Data(contentsOf: thumbURL)
+            if let imageData = data {
+                let image = UIImage(data: imageData)
+                cell.imageView.image = image
+            }
+            
+            let attachment = NSTextAttachment()
+            attachment.image = UIImage(systemName: "hand.thumbsup.fill")
+            let attachmentString = NSAttributedString(attachment: attachment)
+            guard let likes = homePageViewModel[indexPath.item].likes else { return cell }
+            let myString = NSMutableAttributedString(string: "\(likes) ")
+            myString.append(attachmentString)
+            cell.likeView.attributedText = myString
+            cell.likeView.font = .systemFont(ofSize: 12)
+            
+            return cell
+        } else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SpinnerCell", for: indexPath) as! SpinnerCell
+            cell.spinner.startAnimating()
+            return cell
         }
-        cell.likeView.image = #imageLiteral(resourceName: "favorite")
-        return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let router = HomeRouter()
-        router.navigateToDetailsViewController(source: self, destination: DetailsViewController())
+        if indexPath.section == 0 {
+            let router = HomeRouter()
+            var cell = collectionView.cellForItem(at: indexPath) as? ImageCell
+            for i in 0...homePageViewModel.count-1 {
+                cell = collectionView.cellForItem(at: IndexPath(item: i, section: 0)) as? ImageCell
+                if i == indexPath.item {
+                    cell?.hero.id = "tapanimation"
+                }else{
+                    cell?.hero.id = ""
+                }
+            }
+            router.navigateToDetailsViewController(source: self, destination: DetailsViewController())
+        }
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        if contentHeight != 0 {
+            if offsetY > contentHeight - scrollView.frame.height {
+                if !fetchingMore {
+                    beginFetching()
+                }
+            }
+        }
+    }
+    func beginFetching(){
+        if router?.dataStore?.searchKeyword == "" {
+            fetchingMore = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                let request = Home.ImageList.Request.HomePage()
+                self.interactor?.getParsedJSONList(request: request)
+            }
+        }else{
+            print(router?.dataStore?.searchKeyword)
+//            fetchingMore = true
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+//                let request = Home.ImageList.Request.SearchAction()
+//                self.interactor?.getParsedJSONList(request: request)
+//            }
+        }
     }
 }

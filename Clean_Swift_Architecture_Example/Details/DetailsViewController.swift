@@ -25,6 +25,7 @@ class DetailsViewController: UIViewController, DetailsDisplayLogic
     let imagePreview: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
+        imageView.isUserInteractionEnabled = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.clipsToBounds = true
         return imageView
@@ -54,6 +55,25 @@ class DetailsViewController: UIViewController, DetailsDisplayLogic
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
+    
+    let copyImgBtn: UIButton = {
+        let btn = UIButton(type: .custom)
+        btn.setImage(UIImage(systemName: "doc.on.doc.fill"), for: .normal)
+        btn.tintColor = .white
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
+    }()
+    
+    let shareImgBtn: UIButton = {
+        let btn = UIButton(type: .custom)
+        btn.setImage(UIImage(systemName: "square.and.arrow.up.on.square.fill"), for: .normal)
+        btn.tintColor = .white
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
+    }()
+    
+    var isNameDescriptionOtherHidden = false
+    
 
   // MARK: Object lifecycle
   
@@ -103,8 +123,15 @@ class DetailsViewController: UIViewController, DetailsDisplayLogic
   {
     super.viewDidLoad()
     view.backgroundColor = .black
+    
+    self.hero.isEnabled = true
+    self.view.hero.id = "tapanimation"
+    
+    imagePreview.hero.modifiers = [.translate(y:100)]
+    
     detailsViewSetup()
     setupContentView()
+    
   }
   
   // MARK: Do something
@@ -130,12 +157,60 @@ class DetailsViewController: UIViewController, DetailsDisplayLogic
     nameLabel.text = router?.dataStore?.imageDataModdel.user?.name
     
     closeBtn.addTarget(self, action: #selector(dismissPrenstation), for: .touchUpInside)
+    
+    copyImgBtn.addTarget(self, action: #selector(copyImageURL), for: .touchUpInside)
+    shareImgBtn.addTarget(self, action: #selector(shareImage), for: .touchUpInside)
+    
+    let tap = UITapGestureRecognizer(target: self, action: #selector(tapImagePreview(_:)))
+    imagePreview.addGestureRecognizer(tap)
   }
     
-    
+    @objc func tapImagePreview(_ sender: UITapGestureRecognizer) {
+        if !isNameDescriptionOtherHidden {
+            nameLabel.isHidden = true
+            descriptionLabel.isHidden = true
+            copyImgBtn.isHidden = true
+            shareImgBtn.isHidden = true
+            closeBtn.isHidden = true
+            
+            isNameDescriptionOtherHidden = true
+        }else{
+            nameLabel.isHidden = false
+            descriptionLabel.isHidden = false
+            copyImgBtn.isHidden = false
+            shareImgBtn.isHidden = false
+            closeBtn.isHidden = false
+            
+            isNameDescriptionOtherHidden = false
+        }
+    }
     
     @objc func dismissPrenstation() {
         self.dismiss(animated: true)
+    }
+    
+    @objc func copyImageURL() {
+        let pasteboard = UIPasteboard.general
+        pasteboard.string = router?.dataStore?.imageDataModdel.urls?.regular
+    }
+    
+    @objc func shareImage() {
+        // image to share
+        
+        guard let thumbURL = URL(string: (router?.dataStore?.imageDataModdel.urls?.regular)!) else { return }
+        let data = try? Data(contentsOf: thumbURL)
+        if let imageData = data {
+            let image = UIImage(data: imageData)
+            let imageToShare = [ image ]
+            let activityViewController = UIActivityViewController(activityItems: imageToShare as [Any], applicationActivities: nil)
+            activityViewController.popoverPresentationController?.sourceView = self.view // so that iPads won't crash
+
+            // exclude some activity types from the list (optional)
+            activityViewController.excludedActivityTypes = [ .airDrop, .postToFacebook, .message,]
+
+            // present the view controller
+            self.present(activityViewController, animated: true, completion: nil)
+        }
     }
   
   func displaySomething(viewModel: Details.Something.ViewModel)
@@ -174,7 +249,23 @@ extension DetailsViewController {
         NSLayoutConstraint.activate([
             nameLabel.bottomAnchor.constraint(equalTo: descriptionLabel.topAnchor),
             nameLabel.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-            nameLabel.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+        ])
+        
+        self.view.addSubview(copyImgBtn)
+        NSLayoutConstraint.activate([
+            copyImgBtn.bottomAnchor.constraint(equalTo: descriptionLabel.topAnchor),
+            copyImgBtn.leftAnchor.constraint(equalTo: nameLabel.rightAnchor),
+            copyImgBtn.widthAnchor.constraint(equalToConstant: 32),
+            copyImgBtn.heightAnchor.constraint(equalTo: copyImgBtn.widthAnchor),
+        ])
+        
+        self.view.addSubview(shareImgBtn)
+        NSLayoutConstraint.activate([
+            shareImgBtn.bottomAnchor.constraint(equalTo: descriptionLabel.topAnchor),
+            shareImgBtn.leftAnchor.constraint(equalTo: copyImgBtn.rightAnchor),
+            shareImgBtn.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -8),
+            shareImgBtn.widthAnchor.constraint(equalToConstant: 32),
+            shareImgBtn.heightAnchor.constraint(equalTo: shareImgBtn.widthAnchor),
         ])
     }
 }

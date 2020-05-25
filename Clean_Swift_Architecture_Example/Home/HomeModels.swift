@@ -20,12 +20,18 @@ enum Home
   {
     struct Request
     {
-        var baseURL = "https://api.unsplash.com/photos/random/?client_id=place_your_client_id&count=15"
-        let header = [
-          "Accept": "*/*",
-          "Cache-Control": "no-cache",
-          "Connection": "keep-alive"
-        ]
+        struct HomePage {
+             var homePageURL = CommonObjects.shared.unsplashBaseURL+"/photos/random/?client_id="+CommonObjects.shared.unsplashClientID+"&count=20"
+            let header = [
+              "Accept": "*/*",
+              "Cache-Control": "no-cache",
+              "Connection": "keep-alive"
+            ]
+        }
+        
+        struct SearchAction {
+            var unsplashSearchURL = CommonObjects.shared.unsplashBaseURL+"/search/photos/?client_id="+CommonObjects.shared.unsplashClientID+"&count=15&query="
+        }
         
     }
     struct Response

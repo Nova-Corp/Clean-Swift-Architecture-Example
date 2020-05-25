@@ -14,38 +14,40 @@ import UIKit
 
 protocol HomeBusinessLogic
 {
-  func getParsedJSONList(request: Home.ImageList.Request)
-//    func setImageDataStore(_ data: Home.ImageList.Response.ImageListModel)
+    func getParsedJSONList(request: Home.ImageList.Request.HomePage)
 }
 
 protocol HomeDataStore
 {
     var imageDataModdel: Home.ImageList.Response.ImageListModel! { get set }
+    var searchKeyword: String! { get set }
     
 }
 
 class HomeInteractor: HomeBusinessLogic, HomeDataStore
 {
-    
+    var searchKeyword: String!{
+        didSet{
+            let vc = HomeViewController()
+            vc.searchKeyword = searchKeyword
+        }
+    }
     var imageDataModdel: Home.ImageList.Response.ImageListModel!
   var presenter: HomePresentationLogic?
   var worker: HomeWorker?
   
   // MARK: Do something
   
-  func getParsedJSONList(request: Home.ImageList.Request)
+    func getParsedJSONList(request: Home.ImageList.Request.HomePage)
   {
     worker = HomeWorker()
-    worker?.gettingTheImageWork(url: request.baseURL, header: request.header, completionHandler: { data in
+    worker?.gettingTheImageWork(url: request.homePageURL, header: request.header, completionHandler: { data in
         do {
-            let youtubeResponse = try JSONDecoder().decode(Home.ImageList.Response.ImageListModel.self, from: data)
-            self.presenter?.presentParsedImageList(response: youtubeResponse)
+            let unsplashResponse = try JSONDecoder().decode(Home.ImageList.Response.ImageListModel.self, from: data)
+            self.presenter?.presentParsedImageList(response: unsplashResponse)
         } catch {
             print(error)
         }
     })
   }
-//    func setImageDataStore(_ data: Home.ImageList.Response.ImageListModel) {
-//        imageDataModdel = data
-//    }
 }

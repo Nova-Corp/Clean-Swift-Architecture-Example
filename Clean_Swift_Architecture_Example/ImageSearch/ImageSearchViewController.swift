@@ -17,8 +17,14 @@ protocol ImageSearchDisplayLogic: class
     func displayKeywordList(viewModel: ImageSearch.SearchContents.Response.SearchKeyWord)
 }
 
+protocol SendSearchKeywordDelegate {
+    func didSendSearchKeyword(_ keyword: String)
+}
+
 class ImageSearchViewController: UIViewController, ImageSearchDisplayLogic
 {
+    var sendSearchKeywordDelegate: SendSearchKeywordDelegate?
+    
   var interactor: ImageSearchBusinessLogic?
   var router: (NSObjectProtocol & ImageSearchRoutingLogic & ImageSearchDataPassing)?
     
@@ -148,6 +154,7 @@ extension ImageSearchViewController: UISearchBarDelegate, UITableViewDelegate, U
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let router = ImageSearchRouter()
+        sendSearchKeywordDelegate?.didSendSearchKeyword(searchKeyWordList[indexPath.row])
         router.dimissToSearchController(source: self, destination: HomeViewController())
     }
     

@@ -15,23 +15,16 @@ import UIKit
 protocol HomeBusinessLogic
 {
     func getParsedJSONList(request: Home.ImageList.Request.HomePage)
+    func getImageSearchJSONList(request: Home.ImageList.Request.SearchAction)
 }
 
 protocol HomeDataStore
 {
     var imageDataModdel: Home.ImageList.Response.ImageListModel! { get set }
-    var searchKeyword: String! { get set }
-    
 }
 
 class HomeInteractor: HomeBusinessLogic, HomeDataStore
 {
-    var searchKeyword: String!{
-        didSet{
-            let vc = HomeViewController()
-            vc.searchKeyword = searchKeyword
-        }
-    }
     var imageDataModdel: Home.ImageList.Response.ImageListModel!
   var presenter: HomePresentationLogic?
   var worker: HomeWorker?
@@ -50,4 +43,19 @@ class HomeInteractor: HomeBusinessLogic, HomeDataStore
         }
     })
   }
+    
+    func getImageSearchJSONList(request: Home.ImageList.Request.SearchAction)
+    {
+      worker = HomeWorker()
+        worker?.gettingTheImageWork(url: request.unsplashSearchURL, header: nil, completionHandler: { data in
+          do {
+            let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+            let newJson = json?["results"]
+            let unsplashResponse = try JSONDecoder().decode(Home.ImageList.Response.ImageListModel.self, from: try JSONSerialization.data(withJSONObject: newJson!, options: []))
+              self.presenter?.presentParsedImageList(response: unsplashResponse)
+          } catch {
+              print(error)
+          }
+      })
+    }
 }

@@ -48,12 +48,6 @@ class ImageSearchRouter: NSObject, ImageSearchRoutingLogic, ImageSearchDataPassi
   
   func dimissToSearchController(source: ImageSearchViewController, destination: HomeViewController)
   {
-    var destinationDS = destination.router!.dataStore!
-    viewController = source
-    dataStore = source.router?.dataStore
-    dataStore?.searchKeywordList = source.searchKeyWordList
-    passDataToHomeVC(source: dataStore!, destination: &destinationDS)
-    
     source.dismiss(animated: true)
   }
   
@@ -61,7 +55,5 @@ class ImageSearchRouter: NSObject, ImageSearchRoutingLogic, ImageSearchDataPassi
   
   func passDataToHomeVC(source: ImageSearchDataStore, destination: inout HomeDataStore)
   {
-    let row = viewController?.tableView.indexPathForSelectedRow?.row
-    destination.searchKeyword = source.searchKeywordList?[row!]
   }
 }

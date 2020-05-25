@@ -44,11 +44,9 @@ class HomeViewController: UIViewController, HomeDisplayLogic
     
     var fetchingMore = false
 
-    var startSearch = false
+    var searchKeyword = ""
     
-    var searchKeyword: String = ""
-    
-    
+    var currentSearchPage = 1
     
     
   // MARK: Object lifecycle
@@ -121,7 +119,9 @@ class HomeViewController: UIViewController, HomeDisplayLogic
     
     @objc func tapSearchBtn(){
         let router = HomeRouter()
-        router.navigateToSearchViewController(source: self, destination: ImageSearchViewController())
+        let imageSearchViewController = ImageSearchViewController()
+        imageSearchViewController.sendSearchKeywordDelegate = self
+        router.navigateToSearchViewController(source: self, destination: imageSearchViewController)
     }
   
   // MARK: Do something
@@ -134,18 +134,28 @@ class HomeViewController: UIViewController, HomeDisplayLogic
   
   func displayParsedImageList(viewModel: Home.ImageList.Response.ImageListModel)
   {
-    
-    homePageViewModel.append(contentsOf: viewModel)
-    DispatchQueue.main.async {
-        self.spinner.stopAnimating()
-        self.setupImageGrid()
-        self.imageGrid.reloadData()
-        self.fetchingMore = false
+    if searchKeyword == "" {
+        homePageViewModel.append(contentsOf: viewModel)
+        DispatchQueue.main.async {
+            self.spinner.stopAnimating()
+            self.setupImageGrid()
+            self.imageGrid.reloadData()
+            self.fetchingMore = false
+        }
+    }else{
+        homePageViewModel.append(contentsOf: viewModel)
+        DispatchQueue.main.async {
+            self.spinner.stopAnimating()
+            self.imageGrid.isHidden = false
+            self.imageGrid.reloadData()
+            self.fetchingMore = false
+        }
     }
+    
   }
 }
 
-extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout{
+extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, SendSearchKeywordDelegate{
     
     func setupSpinner() {
         self.view.addSubview(spinner)
@@ -246,19 +256,33 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
         }
     }
     func beginFetching(){
-        if router?.dataStore?.searchKeyword == "" {
-            fetchingMore = true
+        fetchingMore = true
+        if searchKeyword == "" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 let request = Home.ImageList.Request.HomePage()
                 self.interactor?.getParsedJSONList(request: request)
             }
         }else{
-            print(router?.dataStore?.searchKeyword)
-//            fetchingMore = true
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-//                let request = Home.ImageList.Request.SearchAction()
-//                self.interactor?.getParsedJSONList(request: request)
-//            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                var request = Home.ImageList.Request.SearchAction()
+                request.unsplashSearchURL += self.searchKeyword + "&page=\(self.currentSearchPage)"
+                self.currentSearchPage += 1
+                self.interactor?.getImageSearchJSONList(request: request)
+            }
+        }
+    }
+    
+    func didSendSearchKeyword(_ keyword: String) {
+        searchKeyword = keyword.replacingOccurrences(of: " ", with: "%20")
+        searchKeyword += "&page=\(currentSearchPage)"
+        currentSearchPage += 1
+        homePageViewModel.removeAll()
+        imageGrid.isHidden = true
+        spinner.startAnimating()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            var request = Home.ImageList.Request.SearchAction()
+            request.unsplashSearchURL += self.searchKeyword
+            self.interactor?.getImageSearchJSONList(request: request)
         }
     }
 }

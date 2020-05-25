@@ -23,7 +23,7 @@ class CommonObjects: NSObject {
     
     
     func getAPIServiceCall(url: String, header: [String: String]?, completionHandler: @escaping (Data) -> Void) {
-        var request = URLRequest(url: URL(string: url)!,timeoutInterval: 10.0)
+        var request = URLRequest(url: URL(string: url)!,timeoutInterval: .infinity)
         request.httpMethod = "GET"
         request.allHTTPHeaderFields = header
         let task = URLSession.shared.dataTask(with: request) { data, response, error in

@@ -21,7 +21,7 @@ enum Home
     struct Request
     {
         struct HomePage {
-             var homePageURL = CommonObjects.shared.unsplashBaseURL+"/photos/random/?client_id="+CommonObjects.shared.unsplashClientID+"&count=20"
+             var homePageURL = CommonObjects.shared.unsplashBaseURL+"/photos/random/?client_id="+CommonObjects.shared.unsplashClientID+"&count=30"
             let header = [
               "Accept": "*/*",
               "Cache-Control": "no-cache",
@@ -30,7 +30,7 @@ enum Home
         }
         
         struct SearchAction {
-            var unsplashSearchURL = CommonObjects.shared.unsplashBaseURL+"/search/photos/?client_id="+CommonObjects.shared.unsplashClientID+"&count=15&query="
+            var unsplashSearchURL = CommonObjects.shared.unsplashBaseURL+"/search/photos/?client_id="+CommonObjects.shared.unsplashClientID+"&count=30&query="
         }
         
     }
